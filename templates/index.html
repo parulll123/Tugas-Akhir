@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+    /* CSS Khusus Dashboard (Card, Grid, dll) */
+    .monitor-card { background-color: var(--card-bg); border-radius: 12px; border: 1px solid #333; overflow: hidden; }
+    .card-header { background: linear-gradient(90deg, #252525 0%, #1e1e1e 100%); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+    .card-body { display: grid; grid-template-columns: 1fr 1.5fr; }
+    .ai-status-section { padding: 30px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #333; text-align: center; }
+    .sensor-grid { display: grid; grid-template-columns: 1fr 1fr; padding: 30px; gap: 20px; }
+    .sensor-item { background: #252525; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; }
+    .sensor-value { font-family: 'Roboto Mono', monospace; font-size: 1.8rem; font-weight: 700; }
+    
+    /* Chart Card */
+    .chart-card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid #333;
+        overflow: hidden;
+        margin-top: 20px;
+        padding: 20px;
+    }
+    
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #333;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--accent-cyan);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .chart-controls {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chart-btn {
+        background: #252525;
+        border: 1px solid #444;
+        color: var(--text-muted);
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    
+    .chart-btn:hover, .chart-btn.active {
+        background: rgba(0, 210, 255, 0.1);
+        color: var(--accent-cyan);
+        border-color: var(--accent-cyan);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    /* Utilities Warna */
+    .normal { color: var(--status-normal); }
+    .danger { color: var(--status-danger); }
+    .warning { color: #ffcc00; }
+    .bg-normal { border-left: 4px solid var(--status-normal); }
+    .bg-danger { border-left: 4px solid var(--status-danger); }
+    
+    /* Live indicator animation */
+    @keyframes pulse {
+        0% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
+        100% { opacity: 0; box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
+    }
+    
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--status-normal);
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <h1 style="margin: 0 0 20px 0;">Real-time Monitoring</h1>
+
+    <div class="monitor-card">
+        <div class="card-header">
+            <div>
+                <h2 style="margin:0; text-transform: uppercase;">3-Phase Motor #01</h2>
+                <span style="color:#a0a0a0; font-size:0.8rem;">Line Produksi A</span>
+            </div>
+            <div style="color:var(--status-normal); display:flex; gap:5px; align-items:center;">
+                <div class="live-dot"></div> LIVE
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="ai-status-section">
+                <i class="fa-solid fa-circle-check normal" id="statusIcon" style="font-size: 4rem; margin-bottom: 15px;"></i>
+                <div class="normal" id="statusText" style="font-size: 1.5rem; font-weight: bold;">NORMAL</div>
+                <div style="background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; margin-top: 5px; font-size: 0.9rem;">
+                    Confidence: <span id="confScore">-</span>%
+                </div>
+            </div>
+
+            <div class="sensor-grid">
+                <div class="sensor-item bg-normal" id="vibCard">
+                    <span style="color:#a0a0a0; font-size:0.8rem;"><i class="fa-solid fa-wave-square"></i> Vibration (RMS)</span>
+                    <div class="sensor-value"><span id="valVib">0</span> <span style="font-size:1rem;">mm/s</span></div>
+                </div>
+                <div class="sensor-item bg-normal">
+                    <span style="color:#a0a0a0; font-size:0.8rem;"><i class="fa-solid fa-temperature-high"></i> Temperature</span>
+                    <div class="sensor-value"><span id="valTemp">0</span> <span style="font-size:1rem;">°C</span></div>
+                </div>
+                <div class="sensor-item">
+                    <span style="color:#a0a0a0; font-size:0.8rem;"><i class="fa-solid fa-bolt"></i> Current</span>
+                    <div class="sensor-value"><span id="valAmp">0</span> <span style="font-size:1rem;">A</span></div>
+                </div>
+                <div class="sensor-item">
+                    <span style="color:#a0a0a0; font-size:0.8rem;"><i class="fa-solid fa-gauge-high"></i> Speed</span>
+                    <div class="sensor-value">1450 <span style="font-size:1rem;">RPM</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <i class="fa-solid fa-chart-line"></i>
+                Riwayat Sensor Real-time
+            </div>
+            <div class="chart-controls">
+                <button class="chart-btn active" onclick="setChartView('vibration')">Vibration</button>
+                <button class="chart-btn" onclick="setChartView('temperature')">Temperature</button>
+                <button class="chart-btn" onclick="setChartView('both')">Both</button>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="sensorChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Data storage untuk chart
+        const maxDataPoints = 30;
+        let chartData = {
+            labels: [],
+            vibration: [],
+            temperature: []
+        };
+        
+        let currentView = 'vibration';
+        
+        // Initialize Chart
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Vibration (mm/s)',
+                    data: chartData.vibration,
+                    borderColor: '#00d2ff',
+                    backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#e0e0e0' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#333' },
+                        ticks: { color: '#a0a0a0' }
+                    },
+                    x: {
+                        grid: { color: '#333' },
+                        ticks: { 
+                            color: '#a0a0a0',
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update chart data
+        function updateChart(vibValue, tempValue) {
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString('id-ID', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            chartData.labels.push(timeLabel);
+            chartData.vibration.push(vibValue);
+            chartData.temperature.push(tempValue);
+            
+            // Keep only last maxDataPoints
+            if (chartData.labels.length > maxDataPoints) {
+                chartData.labels.shift();
+                chartData.vibration.shift();
+                chartData.temperature.shift();
+            }
+            
+            sensorChart.update('none'); // Update without animation for smooth real-time
+        }
+        
+        // Switch chart view
+        function setChartView(view) {
+            currentView = view;
+            
+            // Update button states
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update chart datasets
+            if (view === 'vibration') {
+                sensorChart.data.datasets = [{
+                    label: 'Vibration (mm/s)',
+                    data: chartData.vibration,
+                    borderColor: '#00d2ff',
+                    backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2
+                }];
+            } else if (view === 'temperature') {
+                sensorChart.data.datasets = [{
+                    label: 'Temperature (°C)',
+                    data: chartData.temperature,
+                    borderColor: '#ff6b6b',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2
+                }];
+            } else {
+                sensorChart.data.datasets = [
+                    {
+                        label: 'Vibration (mm/s)',
+                        data: chartData.vibration,
+                        borderColor: '#00d2ff',
+                        backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Temperature (°C)',
+                        data: chartData.temperature,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        yAxisID: 'y1'
+                    }
+                ];
+                
+                // Add second y-axis for temperature
+                sensorChart.options.scales.y1 = {
+                    type: 'linear',
+                    position: 'right',
+                    grid: { drawOnChartArea: false },
+                    ticks: { color: '#a0a0a0' }
+                };
+            }
+            
+            sensorChart.update();
+        }
+
+        // Fetch motor data
+        async function fetchMotorData() {
+            try {
+                const response = await fetch('/api/live-data');
+                const data = await response.json();
+                
+                document.getElementById('valVib').innerText = data.vibration;
+                document.getElementById('valTemp').innerText = data.temperature;
+                document.getElementById('valAmp').innerText = data.current_amp || 0;
+                document.getElementById('confScore').innerText = data.confidence;
+                
+                // Update chart
+                updateChart(parseFloat(data.vibration), parseFloat(data.temperature));
+                
+                // Update visual status
+                const statusText = document.getElementById('statusText');
+                const statusIcon = document.getElementById('statusIcon');
+                const vibCard = document.getElementById('vibCard');
+
+                if (data.status === "DANGER") {
+                    statusText.innerText = "BEARING FAULT";
+                    statusText.className = "danger";
+                    statusIcon.className = "fa-solid fa-triangle-exclamation danger";
+                    vibCard.className = "sensor-item bg-danger";
+                } else {
+                    statusText.innerText = "NORMAL";
+                    statusText.className = "normal";
+                    statusIcon.className = "fa-solid fa-circle-check normal";
+                    vibCard.className = "sensor-item bg-normal";
+                }
+
+            } catch (e) { console.error(e); }
+        }
+        
+        setInterval(fetchMotorData, 1000);
+        fetchMotorData();
+    </script>
+{% endblock %}

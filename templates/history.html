@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Riwayat Anomali</h1>
+    <p style="color: var(--text-muted);">Daftar kejadian dimana AI mendeteksi masalah pada motor.</p>
+
+    {% if logs %}
+    <table>
+        <thead>
+            <tr>
+                <th>Waktu Kejadian</th>
+                <th>Status / Diagnosa</th>
+                <th>Vibrasi (mm/s)</th>
+                <th>Suhu (°C)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td style="font-family: 'Roboto Mono';">{{ log.time }}</td>
+                <td class="status-{{ log.status|lower }}">
+                    {{ log.status }}
+                </td>
+                <td>{{ log.vib }}</td>
+                <td>{{ log.temp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div style="text-align: center; padding: 50px; color: var(--text-muted); border: 1px dashed #333; margin-top: 20px;">
+            <i class="fa-solid fa-clipboard-check" style="font-size: 2rem; margin-bottom: 10px;"></i><br>
+            Belum ada anomali terdeteksi. Sistem berjalan normal.
+        </div>
+    {% endif %}
+    
+    <style>
+        .status-danger {
+            color: #ff3333;
+            font-weight: bold;
+        }
+        .status-warning {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}

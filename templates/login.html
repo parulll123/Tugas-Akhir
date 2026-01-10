@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Motor Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            width: 300px;
+            text-align: center;
+        }
+        h2 { margin-bottom: 20px; color: #00d2ff; text-transform: uppercase; letter-spacing: 2px;}
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #252525;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input:focus { outline: none; border-color: #00d2ff; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #00d2ff;
+            border: none;
+            color: #000;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        button:hover { background: #00aacc; }
+        .alert { color: #ff3333; font-size: 0.9rem; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>System Login</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="text" name="username" placeholder="Username" required autocomplete="off">
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">ACCESS DASHBOARD</button>
+        </form>
+    </div>
+</body>
+</html>
