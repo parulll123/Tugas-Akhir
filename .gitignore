@@ -1,2 +1,17 @@
-myvenv/
+# --- Python / Flask ---
+venv/
+__pycache__/
+*.pyc
 instance/
+.pytest_cache/
+
+# --- Node.js / React ---
+node_modules/
+dist/
+build/
+.DS_Store
+
+# --- Environment Variables (PENTING: Jangan upload password!) ---
+.env
+.env.local
+myvenv/
