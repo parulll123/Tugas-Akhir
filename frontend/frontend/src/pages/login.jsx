@@ -1,35 +1,51 @@
-// frontend/src/pages/Login.jsx
 import { useState } from 'react';
-import './Login.css'; // Import CSS yang tadi dibuat
+import { useNavigate } from 'react-router-dom';
+import './login.css';
 
 export default function Login() {
-    // 1. State untuk menyimpan input user
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+    const navigate = useNavigate();
 
-    // 2. Fungsi saat tombol login ditekan
     const handleLogin = async (e) => {
-        e.preventDefault(); // Mencegah reload halaman
+        e.preventDefault();
+        setErrorMsg(""); // Reset error dulu
         
-        // Disini nanti kita panggil API Flask
-        console.log("Login diklik!", username, password);
-        
-        // Contoh validasi dummy dulu
-        if(!username || !password) {
-            setErrorMsg("Username dan Password wajib diisi!");
-        } else {
-            setErrorMsg(""); // Reset error
-            alert("Siap mengirim data ke Flask!");
+        try {
+            // 1. Kirim data ke Flask
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            // 2. Cek jawaban Flask
+            if (response.ok) {
+                alert("🎉 Login Sukses! Token: " + data.token);
+                console.log("Response:", data);
+                // Nanti di sini kita redirect ke Dashboard
+                navigate('/dashboard');
+            } else {
+                setErrorMsg(data.message || "Login gagal");
+            }
+
+        } catch (error) {
+            console.error("Error:", error);
+            setErrorMsg("Gagal menghubungi server backend.");
         }
     };
 
     return (
+        // ... kode return (tampilan) biarkan sama seperti sebelumnya ...
         <div className="login-page-wrapper">
             <div className="login-card">
                 <h2>System Login</h2>
                 
-                {/* Tampilkan error jika ada */}
                 {errorMsg && <div className="alert">{errorMsg}</div>}
 
                 <form onSubmit={handleLogin}>
