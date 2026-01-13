@@ -14,10 +14,10 @@ function App() {
         {/* Halaman dengan Sidebar (Layout) */}
         <Route element={<Layout />}>
            <Route path="/dashboard" element={<Dashboard />} />
-           {/* Nanti tambah route History & Settings di sini */}
-            <Route path="/history" element={<History />} />
-            <Route path="/settings" element={<Settings />} />
+           <Route path="/history" element={<History />} />
+           <Route path="/settings" element={<Settings />} />
         </Route>
+        
       </Routes>
     </BrowserRouter>
   );
