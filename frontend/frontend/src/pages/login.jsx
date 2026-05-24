@@ -10,64 +10,57 @@ export default function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setErrorMsg(""); // Reset error dulu
-        
+        setErrorMsg("");
+
         try {
-            // 1. Kirim data ke Flask
             const response = await fetch('/api/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
             });
 
             const data = await response.json();
 
-            // 2. Cek jawaban Flask
             if (response.ok) {
-                alert("🎉 Login Sukses! Token: " + data.token);
-                console.log("Response:", data);
-                // Nanti di sini kita redirect ke Dashboard
                 navigate('/dashboard');
             } else {
                 setErrorMsg(data.message || "Login gagal");
             }
-
         } catch (error) {
-            console.error("Error:", error);
             setErrorMsg("Gagal menghubungi server backend.");
         }
     };
 
     return (
-        // ... kode return (tampilan) biarkan sama seperti sebelumnya ...
         <div className="login-page-wrapper">
             <div className="login-card">
-                <h2>System Login</h2>
-                
+                <h2>EDGE AI SYSTEM</h2>
+                <p className="subtitle">Motor 3 Phase Monitoring</p>
+
                 {errorMsg && <div className="alert">{errorMsg}</div>}
 
                 <form onSubmit={handleLogin}>
-                    <input 
-                        type="text" 
-                        placeholder="Username" 
-                        required 
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        required
                         autoComplete="off"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
-                    
-                    <input 
-                        type="password" 
-                        placeholder="Password" 
+
+                    <input
+                        type="password"
+                        placeholder="Password"
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    
+
                     <button type="submit">ACCESS DASHBOARD</button>
                 </form>
+
+                <span className="footer">© 2026 Edge AI</span>
             </div>
         </div>
     );

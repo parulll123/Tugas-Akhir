@@ -1,0 +1,19 @@
+# ── Flask Core ────────────────────────────────────────
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Cors==4.0.1
+Flask-SocketIO==5.3.6
+
+# ── Modbus TCP ────────────────────────────────────────
+pymodbus==3.6.9
+
+# ── Async SocketIO transport ──────────────────────────
+simple-websocket==1.0.0
+
+# ── Database ──────────────────────────────────────────
+# SQLite sudah built-in Python — tidak perlu install
+# Untuk PostgreSQL (production), uncomment:
+# psycopg2-binary==2.9.9
+
+# ── Utilities ────────────────────────────────────────
+python-dotenv==1.0.1

@@ -1,59 +1,104 @@
-/* frontend/src/pages/Login.css */
-
-/* Kita ubah .login-container supaya bisa menggantikan fungsi body di HTML lama */
+/* Background */
 .login-page-wrapper {
-    background-color: #121212;
-    color: #e0e0e0;
-    font-family: 'Roboto', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    background: radial-gradient(circle at top, #1e3a8a, #020617);
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    width: 100vw; /* Pastikan full width */
-    margin: 0;
-    position: fixed; /* Agar menutupi layar */
-    top: 0;
-    left: 0;
+    font-family: 'Inter', 'Roboto', sans-serif;
+    position: fixed;
+    inset: 0;
 }
 
+/* Card */
 .login-card {
-    background-color: #1e1e1e;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    border: 1px solid #333;
-    width: 300px;
+    width: 340px;
+    padding: 36px 32px;
+    background: rgba(20, 20, 30, 0.85);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     text-align: center;
+    backdrop-filter: blur(10px);
 }
 
-h2 { margin-bottom: 20px; color: #00d2ff; text-transform: uppercase; letter-spacing: 2px;}
+/* Title */
+.login-card h2 {
+    margin-bottom: 4px;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: #38bdf8;
+}
 
-/* Perhatikan input dan button selectornya saya buat lebih spesifik agar tidak merusak komponen lain nanti */
+/* Subtitle */
+.subtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+}
+
+/* Input */
 .login-card input {
     width: 100%;
     padding: 12px;
-    margin: 10px 0;
-    background: #252525;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 5px;
-    box-sizing: border-box;
+    margin-bottom: 14px;
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: #e5e7eb;
+    transition: 0.2s;
 }
 
-.login-card input:focus { outline: none; border-color: #00d2ff; }
+.login-card input::placeholder {
+    color: #64748b;
+}
 
+.login-card input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+/* Button */
 .login-card button {
     width: 100%;
     padding: 12px;
-    background: #00d2ff;
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
     border: none;
-    color: #000;
-    font-weight: bold;
-    border-radius: 5px;
+    border-radius: 8px;
+    color: #020617;
+    font-weight: 700;
+    letter-spacing: 1px;
     cursor: pointer;
-    margin-top: 10px;
-    transition: 0.3s;
+    transition: transform 0.1s, box-shadow 0.2s;
 }
 
-.login-card button:hover { background: #00aacc; }
-.alert { color: #ff3333; font-size: 0.9rem; margin-bottom: 10px; }
+.login-card button:hover {
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.35);
+}
+
+.login-card button:active {
+    transform: scale(0.97);
+}
+
+/* Error message */
+.alert {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+    color: #fecaca;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+/* Footer */
+.footer {
+    display: block;
+    margin-top: 22px;
+    font-size: 11px;
+    color: #64748b;
+}
