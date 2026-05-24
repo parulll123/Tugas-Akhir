@@ -1,0 +1,104 @@
+/* Background */
+.login-page-wrapper {
+    height: 100vh;
+    width: 100vw;
+    background: radial-gradient(circle at top, #1e3a8a, #020617);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', 'Roboto', sans-serif;
+    position: fixed;
+    inset: 0;
+}
+
+/* Card */
+.login-card {
+    width: 340px;
+    padding: 36px 32px;
+    background: rgba(20, 20, 30, 0.85);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+/* Title */
+.login-card h2 {
+    margin-bottom: 4px;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: #38bdf8;
+}
+
+/* Subtitle */
+.subtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+}
+
+/* Input */
+.login-card input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 14px;
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: #e5e7eb;
+    transition: 0.2s;
+}
+
+.login-card input::placeholder {
+    color: #64748b;
+}
+
+.login-card input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+/* Button */
+.login-card button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    border: none;
+    border-radius: 8px;
+    color: #020617;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.login-card button:hover {
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.35);
+}
+
+.login-card button:active {
+    transform: scale(0.97);
+}
+
+/* Error message */
+.alert {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+    color: #fecaca;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+/* Footer */
+.footer {
+    display: block;
+    margin-top: 22px;
+    font-size: 11px;
+    color: #64748b;
+}
