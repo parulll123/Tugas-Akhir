@@ -6,32 +6,28 @@ export default function Layout() {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Fungsi helper untuk mengecek menu aktif
-  const isActive = (path) => location.pathname === path ? 'active' : '';
-
-  // Toggle sidebar
+  const isActive = (path) => (location.pathname === path ? 'active' : '');
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
     <div className="app-container">
-      {/* Floating Orbs Background */}
-      <div className="floating-orb floating-orb-1"></div>
-      <div className="floating-orb floating-orb-2"></div>
-      <div className="floating-orb floating-orb-3"></div>
-      
       {/* --- SIDEBAR --- */}
       <nav className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           {isSidebarOpen && (
             <div className="brand">
-              <i className="fa-solid fa-microchip"></i> EDGE AI 
+              <i className="fa-solid fa-microchip"></i> EDGE AI
             </div>
           )}
-          <button className="toggle-btn" onClick={toggleSidebar} title={isSidebarOpen ? 'Tutup Sidebar' : 'Buka Sidebar'}>
+          <button
+            className="toggle-btn"
+            onClick={toggleSidebar}
+            title={isSidebarOpen ? 'Tutup Sidebar' : 'Buka Sidebar'}
+          >
             <i className={`fa-solid ${isSidebarOpen ? 'fa-angles-left' : 'fa-angles-right'}`}></i>
           </button>
         </div>
-        
+
         <ul className="nav-links">
           <li>
             <Link to="/dashboard" className={`nav-link ${isActive('/dashboard')}`} title="Dashboard">
@@ -52,7 +48,7 @@ export default function Layout() {
             </Link>
           </li>
         </ul>
-        
+
         <div className="user-profile">
           <div className="avatar"><i className="fa-solid fa-user"></i></div>
           {isSidebarOpen && (
@@ -72,7 +68,7 @@ export default function Layout() {
       {/* --- CONTENT AREA --- */}
       <main className="main-content">
         <div className="container">
-          <Outlet /> 
+          <Outlet />
         </div>
       </main>
     </div>

@@ -1,0 +1,325 @@
+/* ═══════════════════════════════════════════════════════
+   Layout.css — Motor Monitor  |  Light Dashboard Shell
+   SUMBER TOKEN TUNGGAL untuk seluruh aplikasi.
+   Font: Inter (UI) · JetBrains Mono (angka/telemetri)
+   Selaras dengan Dashboard.css (light theme).
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ── Design Tokens (LIGHT) ───────────────────────────── */
+/* Superset semua nama variabel yang dipakai Dashboard/History/
+   Settings/Login, supaya tidak ada referensi var() yang kosong. */
+:root {
+  /* Backgrounds */
+  --bg-base:        #f0f2f5;
+  --bg-panel:       #ffffff;
+  --bg-card:        #ffffff;
+  --bg-card-alt:    #f8f9fb;
+  --bg-sidebar:     #1e2a3a;   /* navy chrome — menyamai header Dashboard */
+
+  /* Borders */
+  --border:         #e8eaed;
+  --border-bright:  #d1d5db;
+
+  /* Accent — cyan-teal */
+  --accent:         #00bcd4;
+  --accent-light:   #e0f7fa;
+  --accent-mid:     rgba(0, 188, 212, 0.15);
+  --accent-dim:     rgba(0, 188, 212, 0.10);
+  --accent-glow:    rgba(0, 188, 212, 0.25);
+
+  /* Status */
+  --normal:         #10b981;
+  --normal-dim:     #d1fae5;
+  --normal-glow:    rgba(16, 185, 129, 0.25);
+  --warning:        #f59e0b;
+  --warning-dim:    #fef3c7;
+  --warning-glow:   rgba(245, 158, 11, 0.25);
+  --fault:          #ef4444;
+  --fault-dim:      #fee2e2;
+  --fault-glow:     rgba(239, 68, 68, 0.22);
+
+  /* Text */
+  --text-primary:   #111827;
+  --text-secondary: #6b7280;
+  --text-dim:       #9ca3af;
+
+  /* Fonts — --font-display sengaja dipetakan ke Inter
+     agar sisa referensi Orbitron lama otomatis netral. */
+  --font-ui:        'Inter', system-ui, -apple-system, sans-serif;
+  --font-display:   'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:      'JetBrains Mono', ui-monospace, monospace;
+
+  /* Misc */
+  --radius:         10px;
+  --radius-lg:      14px;
+  --radius-pill:    999px;
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:      0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:      0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.05);
+  --sidebar-w:        236px;
+  --sidebar-w-closed: 64px;
+  --transition:     0.18s ease;
+}
+
+/* ── Reset ───────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── App Container ───────────────────────────────────── */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  overflow: hidden;
+}
+
+/* ── Sidebar (navy chrome) ───────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-sidebar);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+  flex-shrink: 0;
+  transition: width var(--transition), padding var(--transition);
+  position: relative;
+  z-index: 100;
+  overflow: hidden;
+}
+
+/* Tipis garis pembatas di sisi kanan sidebar */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar.closed {
+  width: var(--sidebar-w-closed);
+  padding: 18px 8px;
+}
+
+/* ── Sidebar Header ──────────────────────────────────── */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  min-height: 40px;
+}
+
+.brand {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.brand i {
+  font-size: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Toggle Button */
+.toggle-btn {
+  width: 32px; height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 188, 212, 0.12);
+}
+
+.toggle-btn i { font-size: 11px; }
+
+/* ── Nav Links ───────────────────────────────────────── */
+.nav-links { list-style: none; padding: 0; flex-grow: 1; }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  margin-bottom: 4px;
+  position: relative;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Indikator garis kiri saat aktif */
+.nav-link::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  height: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  transform: translateY(-50%);
+  transition: height var(--transition);
+}
+
+.nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-link.active {
+  color: #ffffff;
+  background: rgba(0, 188, 212, 0.14);
+}
+
+.nav-link.active::before { height: 60%; }
+
+.sidebar.closed .nav-link { justify-content: center; padding: 10px 0; }
+
+.nav-link i {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: color var(--transition);
+}
+
+.nav-link.active i { color: var(--accent); }
+
+.nav-link span { white-space: nowrap; overflow: hidden; }
+
+/* ── User Profile ────────────────────────────────────── */
+.user-profile {
+  padding: 12px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+}
+
+.sidebar.closed .user-profile { justify-content: center; padding: 12px 0; }
+
+.avatar {
+  width: 36px; height: 36px;
+  background: rgba(0, 188, 212, 0.16);
+  border: 1px solid rgba(0, 188, 212, 0.5);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.user-info { overflow: hidden; flex: 1; min-width: 0; }
+
+.user-info h4 {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+  margin: 0;
+}
+
+.user-info span {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
+.logout-btn {
+  color: var(--fault);
+  padding: 7px;
+  font-size: 13px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--fault);
+}
+
+/* ── Main Content ────────────────────────────────────── */
+.main-content {
+  flex-grow: 1;
+  padding: 24px 28px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  background: var(--bg-base);
+}
+
+.main-content::-webkit-scrollbar { width: 6px; }
+.main-content::-webkit-scrollbar-track { background: transparent; }
+.main-content::-webkit-scrollbar-thumb {
+  background: var(--border-bright);
+  border-radius: 4px;
+}
+.main-content::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.container { width: 100%; max-width: 1440px; position: relative; }
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  }
+  .sidebar.closed { transform: translateX(-100%); width: var(--sidebar-w); }
+  .main-content { width: 100%; margin-left: 0; padding: 20px 16px; }
+  .toggle-btn { position: fixed; top: 16px; right: 16px; z-index: 1001; }
+}

@@ -1,251 +1,345 @@
-# ═══════════════════════════════════════════════════════
-# modbus_client.py  [FIXED]
-# Modbus TCP Client — polling ESP32 setiap interval
-# Library: pymodbus >= 3.x
-#
-# CHANGELOG (fixes):
-#   [FIX-1] Register map disesuaikan dengan main.cpp ESP32
-#           Urutan asli ESP32: TEMP=0, VIB_X=1, VIB_Y=2, VIB_Z=3,
-#           STATUS=4, ERROR_CODE=5, ETH_FLAG=6
-#   [FIX-2] Scaling vibration diubah /100 → /10 (ESP32 pakai ×10)
-#   [FIX-3] Hapus read_coils() — ESP32 tidak register handler coil,
-#           ganti baca ETH_FLAG dari Holding Register 0x0006
-#   [FIX-4] Field confidence/uptime/wdt_resets dihapus dari polling
-#           karena tidak ada di firmware ESP32 saat ini
-# ═══════════════════════════════════════════════════════
-
 import logging
 import threading
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
 from pymodbus.client import ModbusTcpClient
-from pymodbus.exceptions import ModbusException
 
 logger = logging.getLogger(__name__)
 
-# ── Register Map ─────────────────────────────────────
-# [FIX-1] Disesuaikan dengan ESP32 main.cpp:
-#   REG_TEMPERATURE  = 0   (0x0000) → suhu × 10
-#   REG_VIBRATION_X  = 1   (0x0001) → vibration X × 10
-#   REG_VIBRATION_Y  = 2   (0x0002) → vibration Y × 10
-#   REG_VIBRATION_Z  = 3   (0x0003) → vibration Z × 10
-#   REG_STATUS       = 4   (0x0004) → 0=OK 1=WARNING 2=ERROR
-#   REG_ERROR_CODE   = 5   (0x0005) → error bitmask
-#   REG_ETH_FLAG     = 6   (0x0006) → 1=ethernet connected
-#   REG_RESERVED_7   = 7   (0x0007)
-#   REG_RESERVED_8   = 8   (0x0008)
-#   REG_RESERVED_9   = 9   (0x0009)
+# ==========================================================
+# Register Map
+# ==========================================================
 
-HREG_TEMP        = 0x0000   # Suhu × 10 (uint16)        [FIX-1]
-HREG_VIB_X       = 0x0001   # Getaran X × 10 (uint16)   [FIX-1]
-HREG_VIB_Y       = 0x0002   # Getaran Y × 10 (uint16)   [FIX-1]
-HREG_VIB_Z       = 0x0003   # Getaran Z × 10 (uint16)   [FIX-1]
-HREG_STATUS      = 0x0004   # 0=Normal 1=Warning 2=Error
-HREG_ERROR_CODE  = 0x0005   # Error bitmask              [FIX-1]
-HREG_ETH_FLAG    = 0x0006   # 1=Ethernet connected       [FIX-1, FIX-3]
+HREG_TEMPERATURE = 0
+HREG_VRMS = 1
+HREG_CLUSTER = 2
+HREG_DIST_INT = 3
+HREG_ANOMALY = 4
+HREG_STATUS_SYSTEM = 5
+HREG_ERROR_CODE = 6
+HREG_CONN_FLAG = 7
 
-# Baca 7 register sekaligus (0x0000–0x0006)
-HREG_READ_COUNT  = 7
+HREG_READ_COUNT = 8
 
-STATUS_MAP = {0: "NORMAL", 1: "WARNING", 2: "DANGER"}
+STATUS_SENSOR_OK = 0x0001
+STATUS_ETH_OK = 0x0004
+STATUS_MODBUS_OK = 0x0008
 
-# Error bitmask (sesuai firmware)
-ERROR_NONE     = 0
-ERROR_TEMP     = 1
-ERROR_IMU      = 2
-ERROR_ETHERNET = 4
+ERR_MAX6675_FAIL = 0x0001
+ERR_MPU6050_FAIL = 0x0002
+ERR_ETH_FAIL = 0x0008
 
+ERR_SENSOR_MASK = ERR_MAX6675_FAIL | ERR_MPU6050_FAIL
+
+
+# ==========================================================
+# Data Class
+# ==========================================================
 
 @dataclass
 class SensorReading:
-    """Satu snapshot data dari ESP32."""
-    timestamp:     datetime
-    vib_x:         float        # m/s²
-    vib_y:         float
-    vib_z:         float
-    vib_rms:       float
-    temperature:   float        # °C
-    status:        str          # NORMAL / WARNING / DANGER
-    error_code:    int          # bitmask
+    timestamp: datetime
+    temperature: float
+    vib_rms: float
+    cluster: int
+    dist: float
+    anomaly: bool
+    status: str
+    status_system: int
+    error_code: int
     eth_connected: bool
-    motor:         str = "Motor #01"
+    motor: str = "Motor #01"
 
-    def to_dict(self) -> dict:
+    def to_dict(self):
         return {
-            "timestamp":     self.timestamp.isoformat(),
-            "motor":         self.motor,
-            "vib_x":         self.vib_x,
-            "vib_y":         self.vib_y,
-            "vib_z":         self.vib_z,
-            "vib_rms":       round(self.vib_rms, 4),
-            "temperature":   self.temperature,
-            "status":        self.status,
-            "error_code":    self.error_code,
+            "timestamp": self.timestamp.isoformat(),
+            "motor": self.motor,
+            "temperature": self.temperature,
+            "vib_rms": self.vib_rms,
+            "vibration": self.vib_rms,
+            "cluster": self.cluster,
+            "dist": self.dist,
+            "anomaly": self.anomaly,
+            "status": self.status,
+            "status_system": self.status_system,
+            "error_code": self.error_code,
             "eth_connected": self.eth_connected,
         }
 
 
-def _to_int16(raw: int) -> int:
-    """Konversi uint16 hasil Modbus ke int16 signed."""
-    return raw if raw < 0x8000 else raw - 0x10000
+# ==========================================================
+# Helper
+# ==========================================================
 
+def _to_int16(raw):
+    return raw if raw < 32768 else raw - 65536
+
+
+def _derive_status(anomaly, error):
+
+    if error & ERR_SENSOR_MASK:
+        return "WARNING"
+
+    if anomaly:
+        return "DANGER"
+
+    return "NORMAL"
+
+
+# ==========================================================
+# Client
+# ==========================================================
 
 class ModbusPollingClient:
-    """
-    Polling Modbus TCP ke ESP32 secara periodik di background thread.
-    Thread-safe: data terbaru bisa diakses via .get_latest()
-    """
 
     def __init__(
         self,
-        host: str = "192.168.1.50",
-        port: int = 502,
-        unit_id: int = 1,
-        poll_interval: float = 0.5,
-        timeout: float = 3.0,
-        retry_delay: float = 5.0,
-        on_new_data=None,           # callback(SensorReading)
+        host="192.168.1.50",
+        port=502,
+        unit_id=1,
+        poll_interval=1.0,
+        timeout=3,
+        retry_delay=5,
+        on_new_data=None,
     ):
-        self.host          = host
-        self.port          = port
-        self.unit_id       = unit_id
-        self.poll_interval = poll_interval
-        self.timeout       = timeout
-        self.retry_delay   = retry_delay
-        self.on_new_data   = on_new_data
 
-        self._client: Optional[ModbusTcpClient] = None
-        self._lock   = threading.Lock()
-        self._thread = threading.Thread(
-            target=self._run, daemon=True, name="modbus-poller"
-        )
+        self.host = host
+        self.port = port
+        self.unit_id = unit_id
+
+        self.poll_interval = poll_interval
+        self.timeout = timeout
+        self.retry_delay = retry_delay
+
+        self.on_new_data = on_new_data
+
+        self._client = None
+
         self._stop = threading.Event()
 
-        self.latest:      Optional[SensorReading] = None
-        self.connected:   bool = False
-        self.error_count: int = 0
-        self.total_polls: int = 0
+        self._thread = threading.Thread(
+            target=self._run,
+            daemon=True,
+            name="modbus-poller"
+        )
 
-    # ── Public API ────────────────────────────────────
+        self._lock = threading.Lock()
+
+        self.connected = False
+        self.latest = None
+
+        self.total_polls = 0
+        self.error_count = 0
+
+    # ======================================================
+
     def start(self):
-        logger.info(f"Modbus poller starting → {self.host}:{self.port}")
+
+        logger.info(
+            f"Modbus poller starting -> {self.host}:{self.port}"
+        )
+
         self._thread.start()
 
+    # ======================================================
+
     def stop(self):
+
         self._stop.set()
-        self._thread.join(timeout=5)
+
         if self._client:
-            self._client.close()
-        logger.info("Modbus poller stopped.")
 
-    def get_latest(self) -> Optional[dict]:
+            try:
+                self._client.close()
+            except:
+                pass
+
+        self._thread.join(timeout=5)
+
+    # ======================================================
+
+    def get_latest(self):
+
         with self._lock:
-            return self.latest.to_dict() if self.latest else None
 
-    def is_connected(self) -> bool:
+            if self.latest:
+                return self.latest.to_dict()
+
+            return None
+
+    # ======================================================
+
+    def is_connected(self):
+
         return self.connected
 
-    # ── Internal ──────────────────────────────────────
-    def _connect(self) -> bool:
+    # ======================================================
+
+    def _close_client(self):
+
+        if self._client:
+
+            try:
+                self._client.close()
+            except:
+                pass
+
+        self._client = None
+        self.connected = False
+
+    # ======================================================
+
+    def _connect(self):
+
+        self._close_client()
+
         try:
+
             self._client = ModbusTcpClient(
                 host=self.host,
                 port=self.port,
                 timeout=self.timeout,
             )
-            result = self._client.connect()
-            self.connected = result
-            if result:
-                logger.info(f"Modbus TCP connected → {self.host}:{self.port}")
-            else:
-                logger.warning("Modbus TCP connect() returned False")
-            return result
+
+            if self._client.connect():
+
+                self.connected = True
+
+                logger.info(
+                    f"Modbus TCP connected -> {self.host}:{self.port}"
+                )
+
+                return True
+
+            logger.warning("Connect failed.")
+
         except Exception as e:
-            logger.error(f"Modbus connect error: {e}")
-            self.connected = False
-            return False
 
-    def _poll(self) -> Optional[SensorReading]:
-        """
-        Baca 7 Holding Register sekaligus (1 request batch).
-        [FIX-3] Tidak lagi baca coil — ETH_FLAG dibaca dari HR[6].
-        """
-        try:
-            # Baca 7 register: 0x0000 s/d 0x0006
-            hr = self._client.read_holding_registers(
-                address=0x0000, count=HREG_READ_COUNT, slave=self.unit_id
-            )
-            if hr.isError():
-                raise ModbusException(f"HR read error: {hr}")
+            logger.exception(f"Connect error : {e}")
 
-            regs = hr.registers  # list[uint16], len=7
+        self.connected = False
+        return False
 
-            # [FIX-1] Urutan register sesuai ESP32 main.cpp
-            temperature = regs[HREG_TEMP]    / 10.0          # suhu ÷10
+    # ======================================================
 
-            # [FIX-2] Vibration scaling ×10 di ESP32, jadi bagi 10 (bukan 100)
-            # ESP32 pakai fabs() jadi nilai selalu positif — decode sebagai uint16
-            vib_x = regs[HREG_VIB_X] / 10.0
-            vib_y = regs[HREG_VIB_Y] / 10.0
-            vib_z = regs[HREG_VIB_Z] / 10.0
+    def _poll(self):
 
-            status_raw  = regs[HREG_STATUS]
-            error_code  = regs[HREG_ERROR_CODE]
-
-            # [FIX-3] Baca ethernet flag dari HR[6], bukan dari coil
-            eth_connected = bool(regs[HREG_ETH_FLAG])
-
-            vib_rms = (vib_x**2 + vib_y**2 + vib_z**2) ** 0.5
-
-            reading = SensorReading(
-                timestamp     = datetime.utcnow(),
-                vib_x         = round(vib_x, 3),
-                vib_y         = round(vib_y, 3),
-                vib_z         = round(vib_z, 3),
-                vib_rms       = vib_rms,
-                temperature   = round(temperature, 1),
-                status        = STATUS_MAP.get(status_raw, "UNKNOWN"),
-                error_code    = int(error_code),
-                eth_connected = eth_connected,
-            )
-            return reading
-
-        except (ModbusException, AttributeError, IndexError) as e:
-            logger.warning(f"Poll error: {e}")
-            self.connected = False
+        if self._client is None:
             return None
 
+        try:
+
+            rr = self._client.read_holding_registers(
+                address=0,
+                count=HREG_READ_COUNT,
+                slave=self.unit_id,
+            )
+
+            if rr.isError():
+                raise Exception(rr)
+
+            reg = rr.registers
+
+            temp = _to_int16(reg[0]) / 10
+            vrms = _to_int16(reg[1]) / 1000
+
+            cluster = reg[2]
+
+            dist = reg[3] / 10000
+
+            anomaly = bool(reg[4])
+
+            status_sys = reg[5]
+
+            error = reg[6]
+
+            eth = bool(reg[7])
+
+            status = _derive_status(anomaly, error)
+
+            reading = SensorReading(
+                timestamp=datetime.utcnow(),
+                temperature=round(temp, 1),
+                vib_rms=round(vrms, 3),
+                cluster=cluster,
+                dist=round(dist, 4),
+                anomaly=anomaly,
+                status=status,
+                status_system=status_sys,
+                error_code=error,
+                eth_connected=eth,
+            )
+
+            logger.info(
+                f"POLL OK | "
+                f"T={reading.temperature:.1f}°C | "
+                f"Vrms={reading.vib_rms:.3f} mm/s | "
+                f"Cluster={reading.cluster} | "
+                f"Status={reading.status}"
+            )
+
+            return reading
+
+        except Exception as e:
+
+            logger.exception(f"Polling failed : {e}")
+
+            self.connected = False
+
+            return None
+
+    # ======================================================
+
     def _run(self):
+
         while not self._stop.is_set():
-            # Connect / reconnect
+
             if not self.connected:
+
                 if not self._connect():
-                    logger.info(f"Retry in {self.retry_delay}s...")
+
+                    logger.info(
+                        f"Retry in {self.retry_delay}s..."
+                    )
+
                     self._stop.wait(self.retry_delay)
+
                     continue
 
             reading = self._poll()
+
             self.total_polls += 1
 
             if reading:
-                self.connected   = True
+
                 self.error_count = 0
+
                 with self._lock:
                     self.latest = reading
+
                 if self.on_new_data:
+
                     try:
                         self.on_new_data(reading)
-                    except Exception as e:
-                        logger.error(f"on_new_data callback error: {e}")
+                    except Exception:
+                        logger.exception("Callback error")
+
             else:
+
                 self.error_count += 1
+
+                logger.warning(
+                    f"Polling failed ({self.error_count}/3)"
+                )
+
                 if self.error_count >= 3:
-                    logger.warning("3 consecutive errors — reconnecting...")
-                    self.connected = False
-                    if self._client:
-                        self._client.close()
+
+                    logger.warning(
+                        "Reconnecting Modbus..."
+                    )
+
+                    self._close_client()
 
             self._stop.wait(self.poll_interval)

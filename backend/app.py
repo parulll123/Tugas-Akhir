@@ -1,13 +1,12 @@
 # ═══════════════════════════════════════════════════════
-# app.py  [FIXED]
+# app.py  [REVISI — SINKRON DENGAN New.cpp]
 # Flask Backend — Motor Monitor ESP32
 # Stack: Flask + SQLAlchemy + pymodbus + Flask-SocketIO
 #
-# CHANGELOG (fixes):
-#   [FIX-4] Hapus field uptime_sec, wdt_resets, confidence
-#           dari SensorLog insert — field tersebut tidak ada
-#           di firmware ESP32 saat ini
-#   [FIX-4] Tambah field error_code yang ada di firmware
+# CHANGELOG (revisi sesuai firmware New.cpp):
+#   [REV-1] Insert SensorLog disesuaikan: hapus vib_x/y/z,
+#           tambah vib_rms(mm/s), cluster, dist, anomaly, status_system.
+#   [REV-2] Pesan event status memakai satuan mm/s (bukan m/s²).
 # ═══════════════════════════════════════════════════════
 
 import logging
@@ -43,7 +42,7 @@ class Config:
         "pool_pre_ping": True,
     }
 
-    # [FIX-4] Default host diubah ke 192.168.1.50 (IP ESP32 di main.cpp)
+    # Host = IP ESP32 di New.cpp (STATIC_IP 192.168.1.50)
     MODBUS_HOST    = os.getenv("MODBUS_HOST", "192.168.1.50")
     MODBUS_PORT    = int(os.getenv("MODBUS_PORT", "502"))
     MODBUS_UNIT_ID = int(os.getenv("MODBUS_UNIT_ID", "1"))
@@ -103,17 +102,17 @@ def create_app() -> Flask:
         # Simpan ke database setiap N poll
         if poll_counter["n"] % app.config["LOG_EVERY_N"] == 0:
             with app.app_context():
-                # [FIX-4] Field disesuaikan: hapus uptime_sec/wdt_resets/confidence,
-                #         tambah error_code sesuai firmware ESP32
+                # [REV-1] Field disesuaikan dengan register firmware New.cpp
                 log = SensorLog(
                     timestamp     = reading.timestamp,
                     motor         = reading.motor,
-                    vib_x         = reading.vib_x,
-                    vib_y         = reading.vib_y,
-                    vib_z         = reading.vib_z,
-                    vib_rms       = reading.vib_rms,
                     temperature   = reading.temperature,
+                    vib_rms       = reading.vib_rms,
+                    cluster       = reading.cluster,
+                    dist          = reading.dist,
+                    anomaly       = reading.anomaly,
                     status        = reading.status,
+                    status_system = reading.status_system,
                     error_code    = reading.error_code,
                     eth_connected = reading.eth_connected,
                 )
@@ -128,7 +127,9 @@ def create_app() -> Flask:
                             f"Status berubah: {poll_counter['last_status']} → "
                             f"{reading.status} | "
                             f"T={reading.temperature}°C "
-                            f"vRMS={reading.vib_rms:.3f}m/s²"
+                            f"vRMS={reading.vib_rms:.3f}mm/s "      # [REV-2]
+                            f"cluster={reading.cluster} "
+                            f"anomaly={int(reading.anomaly)}"
                         ),
                     )
                     db.session.add(event)
@@ -136,6 +137,7 @@ def create_app() -> Flask:
                     # Push event ke frontend
                     socketio.emit("status_change", {
                         "status":    reading.status,
+                        "anomaly":   reading.anomaly,
                         "timestamp": reading.timestamp.isoformat(),
                     })
 

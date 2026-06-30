@@ -1,48 +1,13 @@
 /* ═══════════════════════════════════════════════════════
-   History.css — Motor Monitor Industrial Control Room
+   History.css — Motor Monitor  |  Light Theme
    Menyesuaikan style Dashboard.css
-   Font: Orbitron · Rajdhani · Share Tech Mono
+   Font: Inter · JetBrains Mono
    ═══════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 /* ── CSS Variables (sama dengan Dashboard) ───────────── */
-:root {
-  --bg-base:      #070b12;
-  --bg-panel:     #0b1120;
-  --bg-card:      #0e1628;
-  --bg-card-alt:  #111a2e;
-  --border:       #1c2e4a;
-  --border-bright:#2a4570;
-
-  --accent:       #00cfff;
-  --accent-dim:   rgba(0, 207, 255, 0.12);
-  --accent-glow:  rgba(0, 207, 255, 0.35);
-
-  --normal:       #00e676;
-  --normal-dim:   rgba(0, 230, 118, 0.12);
-  --normal-glow:  rgba(0, 230, 118, 0.4);
-
-  --warning:      #ffab00;
-  --warning-dim:  rgba(255, 171, 0, 0.12);
-  --warning-glow: rgba(255, 171, 0, 0.4);
-
-  --fault:        #ff1744;
-  --fault-dim:    rgba(255, 23, 68, 0.12);
-  --fault-glow:   rgba(255, 23, 68, 0.5);
-
-  --text-primary: #ddeeff;
-  --text-secondary:#7a9bbf;
-  --text-dim:     #3a5570;
-
-  --font-display: 'Orbitron', monospace;
-  --font-ui:      'Rajdhani', sans-serif;
-  --font-mono:    'Share Tech Mono', monospace;
-
-  --radius:       6px;
-  --radius-lg:    10px;
-  --transition:   0.2s ease;
-}
+/* Token warna & font diwarisi global dari Layout.css (light theme) */
 
 /* ── Header Section ──────────────────────────────────── */
 .history-header {
@@ -70,7 +35,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
@@ -164,11 +129,11 @@
   font-family: var(--font-display);
   font-size: 26px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   line-height: 1;
   margin-bottom: 4px;
   letter-spacing: 0.04em;
-  text-shadow: 0 0 10px rgba(255,255,255,0.15);
+  text-shadow: none;
 }
 
 .stat-label {
@@ -253,7 +218,7 @@
 
 /* Style native select arrow */
 .control-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%233a5570'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 28px;
@@ -415,7 +380,7 @@
 }
 
 .history-table tbody tr {
-  border-bottom: 1px solid rgba(28, 46, 74, 0.6);
+  border-bottom: 1px solid var(--border);
   transition: background var(--transition);
 }
 

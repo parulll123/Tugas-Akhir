@@ -1,0 +1,370 @@
+/* ═══════════════════════════════════════════════════════
+   Dashboard.css — Motor Monitor  |  Simple Card Grid
+   Gaya: kartu putih · sudut membulat · shadow lembut
+   Token & font diwarisi global dari Layout.css (light).
+   ═══════════════════════════════════════════════════════ */
+
+.dashboard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+}
+
+/* ── Top bar ─────────────────────────────────────────── */
+.dash-topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dash-title h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.dash-title p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.dash-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dash-clock {
+  text-align: right;
+}
+
+.dash-clock .clock {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+.dash-clock .date {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.conn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.conn-pill .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.conn-pill.online  { background: var(--normal-dim); color: #047857; }
+.conn-pill.offline { background: var(--fault-dim);  color: #b91c1c; }
+.conn-pill.online .dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── KPI grid (kotak-kotak) ──────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.kpi-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.kpi-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.kpi-value {
+  font-family: var(--font-mono);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 4px;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.kpi-value.normal  { color: var(--normal); }
+.kpi-value.warning { color: var(--warning); }
+.kpi-value.danger  { color: var(--fault); }
+.kpi-value.accent  { color: var(--accent); }
+
+.kpi-sub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.kpi-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.kpi-icon.is-status  { background: var(--normal-dim);  color: var(--normal); }
+.kpi-icon.is-temp    { background: var(--fault-dim);   color: var(--fault); }
+.kpi-icon.is-vib     { background: var(--accent-mid);  color: var(--accent); }
+.kpi-icon.is-cluster { background: #ede9fe;            color: #7c3aed; }
+.kpi-icon.is-conn    { background: var(--warning-dim); color: var(--warning); }
+
+/* warna ikon status mengikuti kondisi */
+.kpi-icon.is-status.warning { background: var(--warning-dim); color: var(--warning); }
+.kpi-icon.is-status.danger  { background: var(--fault-dim);   color: var(--fault); }
+
+/* ── Panel / kartu chart ─────────────────────────────── */
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.panel-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.panel-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+}
+
+/* ── Baris chart: hero (2fr) + samping (1fr) ─────────── */
+.chart-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.chart-box { width: 100%; }
+
+/* ── Donut anomali ───────────────────────────────────── */
+.donut-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 170px;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donut-center .pct {
+  font-family: var(--font-mono);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.donut-center .pct-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.donut-legend {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.donut-legend .item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.donut-legend .swatch {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.donut-legend .count {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── Event log ───────────────────────────────────────── */
+.events {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.event-head, .event-row {
+  display: grid;
+  grid-template-columns: 74px 96px 1fr;
+  gap: 8px;
+  padding: 9px 12px;
+  align-items: center;
+}
+
+.event-head {
+  background: var(--bg-card-alt);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.event-scroll { overflow-y: auto; flex: 1; }
+.event-scroll::-webkit-scrollbar { width: 5px; }
+.event-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+
+.event-row {
+  border-bottom: 1px solid var(--border);
+  font-size: 0.76rem;
+  animation: row-in 0.25s ease;
+}
+
+@keyframes row-in { from{opacity:0;transform:translateY(-3px)} to{opacity:1;transform:none} }
+
+.event-row:last-child { border-bottom: none; }
+.event-time { font-family: var(--font-mono); color: var(--text-dim); }
+
+.event-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.event-badge.normal  { background: var(--normal-dim);  color: #047857; }
+.event-badge.warning { background: var(--warning-dim); color: #92400e; }
+.event-badge.danger  { background: var(--fault-dim);   color: #b91c1c; }
+
+.event-detail {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-empty {
+  padding: 26px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+.dash-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  padding: 12px 4px 2px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.dash-footer .item { display: flex; gap: 6px; }
+.dash-footer .k { color: var(--text-dim); }
+.dash-footer .v { color: var(--text-secondary); font-weight: 600; }
+
+/* ── Recharts axis (light) ───────────────────────────── */
+.recharts-cartesian-axis-tick-value {
+  fill: var(--text-dim) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 9px !important;
+}
+.recharts-tooltip-wrapper { z-index: 50; }
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 900px) {
+  .chart-row { grid-template-columns: 1fr; }
+}
